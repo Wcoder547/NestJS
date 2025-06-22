@@ -1,0 +1,150 @@
+🧠 Dependency Injection (DI) aur Providers Scope -
+============================================================
+
+🔥 Dependency Injection Kya Hota Hai?
+Dependency Injection (DI) aik design pattern hai jahan aap kisi class ke andar uske required object (dependency) ko bahar se inject karte ho instead of khud banane ke. NestJS mein yeh kaam automatic hota hai IoC Container ke through. Isse code clean, testable aur maintainable banta hai.
+
+============================================================
+
+📦 Provider Types (3 Types)
+
+NestJS mein har woh cheez jo inject ki jati hai usse Provider kehte hain.
+
+1️⃣ Class-Based Provider (STANDARD)
+- Sab se common type hai.
+- @Injectable() class hoti hai.
+- NestJS is class ka instance khud banata hai aur inject karta hai jahan zaroorat ho.
+
+Example:
+@Injectable()
+class UserService {}
+
+Use Case: Services, Repositories, Stores
+
+2️⃣ Value-Based Provider (VALUE)
+- Aisi values jo class nahi hoti jaise string, number, boolean, object, array, function.
+- Use Case: Configs, ENV values, URLs, Database name waghera.
+
+Example:
+{ provide: 'API_URL', useValue: 'https://api.com' }
+
+Injection:
+constructor(@Inject('API_URL') private url: string) {}
+
+3️⃣ Factory-Based Provider (FACTORY)
+- Jab aapko dynamic value ya conditional value deni ho.
+- Factory function ya async function se value return hoti hai.
+
+Use Case: Dynamic config, env-based settings.
+
+Example:
+{
+  provide: 'CONFIG',
+  useFactory: () => {
+    return process.env.NODE_ENV === 'prod'
+      ? { debug: false }
+      : { debug: true };
+  }
+}
+
+Injection:
+constructor(@Inject('CONFIG') private config) {}
+
+============================================================
+
+💉 Injection Types (2 Tarike)
+
+1️⃣ Constructor Injection (Most Common)
+- Dependency directly constructor ke through inject hoti hai.
+Example:
+constructor(private userService: UserService) {}
+Custom token ke sath:
+constructor(@Inject('API_URL') private url: string) {}
+
+2️⃣ Property Injection (Kam use hoti hai)
+- Jab constructor flexible nahi ho (e.g. inheritance case).
+Example:
+class User {
+  @Inject('ENV')
+  private env: string;
+}
+
+> NestJS mein mostly Constructor Injection hi use hoti hai.
+
+============================================================
+
+🧰 Real Example
+
+@Injectable()
+class EmailService {
+  send() {
+    console.log('email sent');
+  }
+}
+
+@Injectable()
+class UserService {
+  constructor(private email: EmailService) {}
+
+  register() {
+    this.email.send();
+  }
+}
+
+Nest app automatically EmailService ko inject karega jab UserService banega.
+
+============================================================
+
+⚙️ Providers Register Karne Ka Tarika (Module Mein)
+
+@Module({
+  providers: [
+    EmailService,
+    UserService,
+    { provide: 'API_KEY', useValue: '12345' },
+    { provide: 'CONFIG', useFactory: () => ({ debug: true }) }
+  ]
+})
+
+============================================================
+
+🗂️ Providers Scope 
+
+👉 Providers kya hotay hain?
+NestJS mein Providers woh special classes hoti hain jo koi kaam ya service provide karti hain jaise DB access, caching ya koi bhi logic. Inko `@Injectable()` decorator se banate hain aur module mein register karte hain.
+
+👉 Singleton ka matlab:
+Ek hi class ka aik hi object banta hai aur wohi har jagah use hota hai. Har module ke injector mein woh singleton hota hai.
+
+👉 Module Level Injector:
+Har module ka apna Injector hota hai jo us module ke providers ke instances ko rakhta hai. Agar kisi aur module mein wohi provider chahiye to uska alag instance banta hai.
+
+👉 Example:
+- Account Module: ACCOUNT aur CACHE-STORE
+- Cache Module: sirf CACHE-STORE
+- Bank Module: WALLET, BANK, CACHE-STORE
+
+👉 IOC Container:
+Sab modules aur unke injectors aik shared IOC Container mein registered hotay hain lekin har module ka apna instance hota hai.
+
+✅ Faida:
+- Memory save hoti hai.
+- Encapsulation hoti hai.
+- Reuse hota hai.
+- Easy manageability.
+
+============================================================
+
+🔗 Dependency Injection 
+
+- `@Injectable()` se class ko IOC Container mein register karte hain.
+- Constructor mein Injection Token se dependency mangte hain.
+- NestJS khud runtime pe instance bana ke inject karta hai.
+
+✅ Faida:
+- Loose Coupling
+- Easy Testing
+- Clean Code
+- Easy Maintenance
+
+============================================================

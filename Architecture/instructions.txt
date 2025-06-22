@@ -1,0 +1,476 @@
+📌 What is NestJS?
+NestJS is a progressive Node.js framework for building efficient, scalable, and well-structured server-side applications using TypeScript.
+It is built on top of Express (or optionally Fastify) and follows Angular’s modular and decorator-based structure.
+
+------------------------------------------
+🏗 Basic Building Blocks of NestJS
+------------------------------------------
+
+1. Module (`@Module`)
+- The fundamental unit of NestJS app structure.
+- A NestJS app is a collection of modules.
+
+Example:
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+2. Controller (`@Controller`)
+- Handles incoming HTTP requests and returns responses.
+- Route handlers (GET, POST, PUT, DELETE) live here.
+
+Example:
+@Controller('users')
+export class UsersController {
+  @Get()
+  getAllUsers() {
+    return 'List of users';
+  }
+}
+
+3. Service (`@Injectable`)
+- Handles business logic and data manipulation.
+- Injected into controllers using dependency injection.
+
+Example:
+@Injectable()
+export class UsersService {
+  getUsers() {
+    return ['User1', 'User2'];
+  }
+}
+
+4. DTO (Data Transfer Object)
+- Used to validate and type request bodies.
+- Works with class-validator and class-transformer.
+
+Example:
+export class CreateUserDto {
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+}
+
+---------------------------
+🌐 NestJS Request Lifecycle 
+---------------------------
+
+CLIENT → Middleware → Guard → Interceptor → Pipe → Controller → Service → Response  
+                         ↓ Exception Filter (if error)
+
+🧱 Components Involved:
+
+1. Middleware (Global)
+- Runs before anything else.
+- Used for logging, authentication headers, request modification.
+- Example: Logging request details, adding a custom header.
+
+2. Guard (Global or Route Level)
+- Used for access control.
+- Checks permissions, roles, or auth tokens before continuing.
+- Implements `CanActivate` interface.
+
+3. Interceptor (Global or Route Level)
+- Used to transform or log requests/responses.
+- Can modify data before it reaches the controller or before it's sent to the client.
+
+4. Pipe (Global or Route Level)
+- Used to validate and transform request data.
+- Commonly used with DTOs and class-validator.
+
+5. Controller
+- Receives incoming requests and delegates to services.
+- Handles routes like `/users`, `/profile`, `/wallet`.
+
+6. Request Handlers (Route level methods inside controller)
+- Methods like @Get('/profile'), @Post('/wallet')
+- Call the appropriate service method to handle business logic.
+
+7. Service
+- Contains core business logic.
+- Example: Communicates with the database, applies processing, returns data.
+
+8. Exception Filter
+- Handles and formats errors.
+- Can be global (applies to all requests) or route-specific.
+
+------------------------------------------------
+📘 EXAMPLE FLOW:
+
+Client sends request to `/users`
+
+→ Middleware logs the request  
+→ Guard checks if user is authorized  
+→ Interceptor adds timestamp  
+→ Pipe validates input using DTO  
+→ Controller's `getUsers()` is called  
+→ Service returns list of users  
+→ Interceptor may format response  
+→ Response is sent back to client  
+→ If error occurs, ExceptionFilter handles it
+
+------------------------------------------------
+
+------------------------------------------
+🧪 Testing in NestJS
+------------------------------------------
+
+1. Unit Testing:
+- Use Jest (default)
+- Test services, controllers, and pipes.
+
+2. E2E Testing:
+- Use `@nestjs/testing` + SuperTest.
+- Simulate actual HTTP requests to routes.
+
+------------------------------------------
+📦 Common Packages to Install
+------------------------------------------
+
+npm i class-validator class-transformer
+→ For DTO validation and transformation
+
+npm i @nestjs/config
+→ For managing environment variables (.env)
+
+npm i @nestjs/typeorm typeorm pg
+→ For using PostgreSQL with TypeORM
+
+------------------------------------------
+📚 Best Practices for Senior Role
+------------------------------------------
+
+- Validate all inputs using DTOs + Pipes
+- Keep controller logic minimal (delegate to services)
+- Use async/await with error handling (try/catch or filters)
+- Structure by feature modules (modular structure)
+- Reuse common logic with providers
+- Add unit & integration tests
+- Use global validation pipe in main.ts
+- Secure routes using guards (e.g., JWT, roles)
+
+main.ts setup:
+app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
+
+
+
+
+NestJS is built to handle HTTP requests in a structured flow.
+This is how a typical request and response move through a NestJS app:
+
+=====================================================
+🟣 STEP 1: CLIENT Sends Request
+=====================================================
+The client (browser, mobile app, Postman, etc.) sends an HTTP request (e.g., GET, POST, PUT).
+
+Example:
+GET /users
+POST /wallet
+
+=====================================================
+🟩 STEP 2: GLOBAL MIDDLEWARE (Optional)
+=====================================================
+- Middleware is the first layer to process the request.
+- Runs before everything else.
+- You can log the request, modify headers, or block requests.
+- Not tied to routes, works at global or route level.
+
+💡 Example use cases:
+- Logging user IP address
+- Adding request timestamps
+- Checking for API keys
+
+\=====================================================
+🟩 STEP 3: GUARD (Security Layer)
+=================================
+
+* Guards are used to protect routes.
+* It decides whether the user can access a route.
+* Implements `CanActivate` interface.
+
+💡 Example use cases:
+
+* Check if user is authenticated
+* Role-based access (admin, user, etc.)
+* JWT token verification
+
+
+\=====================================================
+🟩 STEP 4: INTERCEPTOR (Before Controller)
+==========================================
+
+* Interceptors run before and after the route handler.
+* Can modify the request and response.
+* Implements `NestInterceptor`.
+
+💡 Example use cases:
+
+* Response transformation
+* Caching
+* Logging execution time
+
+
+\============================================
+🟩 STEP 5: PIPE (Validation & Transformation)
+=============================================
+
+* Pipes run before the controller method.
+* Used to validate and transform input data.
+* Works with DTO + class-validator.
+
+💡 Example use cases:
+
+* Validate that `age` is a number
+* Transform string to int
+
+
+\=====================================================
+🟨 STEP 6: CONTROLLER
+=====================
+
+* Controller receives the request after all previous layers pass.
+* It decides what to do with the request.
+* It calls services to handle business logic.
+
+
+\=========================
+🟨 STEP 7: REQUEST HANDLER
+==========================
+
+* Inside the controller, specific functions handle the routes.
+
+Example:
+
+@Get()
+getAllUsers() { ... }
+
+@Post()
+createUser() { ... }
+
+
+Each method can have its own guard, pipe, and interceptor too.
+
+===================================
+🟪 STEP 8: SERVICE (Business Logic)
+===================================
+
+* Services contain all the core business logic.
+* Controllers are thin, services are fat.
+* Services are injected using Dependency Injection.
+
+💡 Example:
+
+@Injectable()
+export class UsersService {
+  findAll() {
+    return ['user1', 'user2'];
+  }
+}
+
+This is where you talk to databases, perform calculations, and apply rules.
+
+\=====================================================
+🟥 STEP 9: EXCEPTION FILTER (Error Handling)
+============================================
+
+* If something goes wrong in controller or service, NestJS throws an exception.
+* Exception filters catch errors and format the response.
+
+💡 Global setup:
+
+```ts
+app.useGlobalFilters(new HttpExceptionFilter());
+```
+
+💡 Custom filter example:
+
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const status = exception.getStatus();
+    const message = exception.getResponse();
+
+    response.status(status).json({
+      statusCode: status,
+      message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+=================================================
+🟩 STEP 10: INTERCEPTOR (Before Sending Response)
+=================================================
+
+* After controller returns the response, Interceptor can run again to modify it.
+
+💡 Example:
+
+return next.handle().pipe(
+  map(data => ({ data, success: true }))
+);
+
+
+\===================================
+🟣 STEP 11: CLIENT Receives Response
+====================================
+
+The final formatted and validated response is sent back to the client.
+
+Example:
+
+{
+  "data": ["user1", "user2"],
+  "success": true
+}
+
+🔥 Tips for Senior Role
+
+* Use **global pipes** for validation (`ValidationPipe`)
+* Write clean, reusable guards and interceptors
+* Always use DTOs + class-validator
+* Separate business logic into services
+* Use modular architecture (feature folders)
+* Write exception filters for standard error handling
+* Handle both sync and async errors
+* Add unit tests for services and guards
+
+   
+-----------------------------------------------
+🐉 What is the Application Structure in NestJS?
+-----------------------------------------------
+
+In NestJS, a large app is organized into Modules, Controllers, services Models and Global Components (like Middleware, Guards, Pipes, Interceptors).
+
+This keeps the app clean, maintainable, and scalable.
+
+------------------------------------------
+✅ 1️⃣ GLOBAL COMPONENTS
+------------------------------------------
+
+These are features that work globally, across the entire app:
+
+-   Middleware
+  - Runs first on every request.
+  - Use for logging, editing request, adding headers.
+  - Example: log request URL.
+
+-   Guard
+  - Controls access.
+  - Checks if the user has permission (like JWT auth, roles).
+  - Implements `CanActivate`.
+
+-   Interceptor
+  - Runs before/after controller logic.
+  - Modifies or logs request/response.
+  - Example: wrap response, measure time.
+
+-   Pipe
+  - Validates and transforms request data.
+  - Example: check if ID is number, validate DTO.
+
+👉 These can be used at:
+- Global level
+- Module level
+- Controller/Route level
+
+------------------------------------------
+✅ 2️⃣ MODULES
+------------------------------------------
+
+NestJS uses feature-based modules for a clean structure.
+
+📦 a) Models Module
+- Contains User Model,Photo Model Album Model
+- Keeps all DB schemas in one place.
+- Has configs too.
+
+Example:-
+@Module({
+  providers: [UserModel, PhotoModel, AlbumModel],
+  exports: [UserModel, PhotoModel, AlbumModel],
+})
+export class ModelsModule {}
+
+
+📦 b) Users Module
+
+* Route: `/users`
+* Contains:
+
+  * Uses Models Module
+  * Controller → Handles `/users` routes
+  * User Service → Business logic for users
+  * Profile Service → Profile-related logic
+
+Example:
+
+@Controller('users')
+export class UsersController {
+  constructor(private userService: UserService) {}
+
+  @Get()
+  getUsers() {
+    return this.userService.findAll();
+  }
+}
+
+
+📦 c) Album Module
+
+* Routes: `/album` & `/photos`
+* Contains:
+
+  * Uses Models + Users Module
+  * Controller** for `/album`
+  * Controller** for `/photos`
+  * Album Service
+
+Example:
+
+@Controller('album')
+export class AlbumController {
+  constructor(private albumService: AlbumService) {}
+
+  @Get()
+  getAlbums() {
+    return this.albumService.findAll();
+  }
+}
+
+
+📦 d) App Module (Root)
+
+* Central module.
+* Imports Models Module Users Module Album Module
+* Has global configs, AppController, AppService.
+
+Example:
+@Module({
+  imports: [ModelsModule, UsersModule, AlbumModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+
+ 3️⃣ BOOTSTRAP FILE (main.ts)
+
+*  main.ts is the entry point.
+* It boots up the app and listens for requests.
+
+Example:
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
+}
+bootstrap();
+
