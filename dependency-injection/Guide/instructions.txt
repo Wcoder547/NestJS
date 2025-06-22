@@ -148,3 +148,50 @@ Sab modules aur unke injectors aik shared IOC Container mein registered hotay ha
 - Easy Maintenance
 
 ============================================================
+
+🧪 Injection Scopes
+
+NestJS mein providers ka scope define karta hai ke unka instance kab aur kitni baar banega. Scope se control milta hai instance lifecycle par.
+
+🔁 Default Scope (Singleton)
+
+    Ye default behavior hai.
+
+    Har provider ka sirf aik hi instance banta hai app lifecycle ke dauran.
+
+    Same instance har jagah reuse hota hai.
+
+Example:
+
+@Injectable()
+class EmailService {}
+
+✅ Use Case: Common services, configuration, shared logic
+
+🔂 Transient Scope
+
+    Jab bhi inject karo, naya instance banta hai.
+
+    Har injection point pe ek alag instance create hota hai.
+
+Example:
+
+@Injectable({ scope: Scope.TRANSIENT })
+class LoggerService {}
+
+✅ Use Case: Stateless utilities, logging, dynamic behavior
+
+🔄 Request Scope
+
+    Har HTTP request ke liye naya instance create hota hai.
+
+    Useful jab aapko request-specific data (jaise user info) handle karna ho.
+
+Example:
+
+@Injectable({ scope: Scope.REQUEST })
+class AuthService {}
+
+⚠️ Note: Is scope mein inject hone wali dependencies bhi request-scoped honi chahiye, warna error milega.
+
+✅ Use Case: Auth, session-based data, multi-tenant logic

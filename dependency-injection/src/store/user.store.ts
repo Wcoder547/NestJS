@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
 
 interface User {
   name: string;
   age: number;
   id: number;
 }
-@Injectable()
+// @Injectable({ scope: Scope.DEFAULT })
+// @Injectable({ scope: Scope.REQUEST })
+@Injectable({ scope: Scope.TRANSIENT })
 export class UserStore {
   private store = new Map<number, User>();
 
