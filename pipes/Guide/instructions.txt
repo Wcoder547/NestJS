@@ -301,3 +301,173 @@ GET [http://localhost:3000/custom-pipes/range/50](http://localhost:3000/custom-p
 GET [http://localhost:3000/custom-pipes/range/200](http://localhost:3000/custom-pipes/range/200)    (Invalid)
 
 ---
+
+
+NestJS Schema-Based Validation –
+
+What Is Schema-Based Validation?
+
+Schema-based validation uses schema definitions (like Zod or Joi) to validate incoming data instead of decorators like @IsString(), @IsEmail() used in class-validator.
+
+Benefits:
+
+    Independent of classes and decorators
+
+    Powerful composability
+
+    More flexible with advanced data structures
+
+    Easily reusable
+
+Popular Libraries:
+
+    Zod (modern and recommended)
+
+    Joi (older but widely supported)
+
+    Zod Schema Validation in NestJS
+
+Installation:
+
+npm install zod
+
+Optional helper for request validation:
+npm install @anatine/zod-nestjs
+
+Basic Use Without Decorators:
+
+Step 1 – Create Zod Schema
+
+// src/schemas/user.schema.ts
+import { z } from 'zod';
+
+export const CreateUserSchema = z.object({
+name: z.string().min(1, 'Name is required'),
+email: z.string().email('Invalid email'),
+});
+
+export type CreateUserDto = z.infer<typeof CreateUserSchema>;
+
+Step 2 – Create Pipe for Zod
+
+// src/pipes/zod-validation.pipe.ts
+import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import { ZodSchema } from 'zod';
+
+@Injectable()
+export class ZodValidationPipe implements PipeTransform {
+constructor(private schema: ZodSchema) {}
+
+transform(value: any) {
+const result = this.schema.safeParse(value);
+if (!result.success) {
+throw new BadRequestException(result.error.format());
+}
+return result.data;
+}
+}
+
+Step 3 – Apply in Controller
+
+// src/user.controller.ts
+import { Controller, Post, Body } from '@nestjs/common';
+import { CreateUserSchema } from './schemas/user.schema';
+import { ZodValidationPipe } from './pipes/zod-validation.pipe';
+
+@Controller('users')
+export class UserController {
+@Post()
+createUser(
+@Body(new ZodValidationPipe(CreateUserSchema)) body: any
+) {
+return { user: body };
+}
+}
+
+Test Request:
+
+POST http://localhost:3000/users
+Body:
+{ "name": "", "email": "not-an-email" }
+
+Response:
+400 Bad Request with detailed Zod error structure.
+
+Zod supports nested schemas, enums, arrays, unions, and more.
+
+    Joi Schema Validation in NestJS
+
+Installation:
+
+npm install joi
+
+Step 1 – Create Joi Schema
+
+// src/schemas/user.joi.ts
+import * as Joi from 'joi';
+
+export const createUserJoiSchema = Joi.object({
+name: Joi.string().min(1).required(),
+email: Joi.string().email().required(),
+});
+
+Step 2 – Create Pipe for Joi
+
+// src/pipes/joi-validation.pipe.ts
+import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import { ObjectSchema } from 'joi';
+
+@Injectable()
+export class JoiValidationPipe implements PipeTransform {
+constructor(private schema: ObjectSchema) {}
+
+transform(value: any) {
+const { error, value: validatedValue } = this.schema.validate(value, { abortEarly: false });
+if (error) {
+throw new BadRequestException(error.details);
+}
+return validatedValue;
+}
+}
+
+Step 3 – Apply in Controller
+
+// src/user.controller.ts
+import { Controller, Post, Body } from '@nestjs/common';
+import { createUserJoiSchema } from './schemas/user.joi';
+import { JoiValidationPipe } from './pipes/joi-validation.pipe';
+
+@Controller('users-joi')
+export class UserJoiController {
+@Post()
+createUser(@Body(new JoiValidationPipe(createUserJoiSchema)) body: any) {
+return { user: body };
+}
+}
+
+When to Use Schema-Based Validation?
+
+Use it when:
+
+    You want full control without decorators
+
+    You prefer functional programming over class-based DTOs
+
+    You need better validation for nested, complex, dynamic, or deeply nested data
+
+Zod vs Joi
+
+Zod:
+
+    Modern, TypeScript-first, fast
+
+    Full intellisense and inferred types
+
+    Preferred for new projects
+
+Joi:
+
+    Mature, has more legacy support
+
+    Slightly less TypeScript friendly
+
