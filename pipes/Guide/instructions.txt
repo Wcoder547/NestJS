@@ -1,0 +1,303 @@
+Sure. Here's a clean, organized **plain text version** of **NestJS Built-in Pipes** and **Custom Pipes** practical + theory notes. It’s fully suitable for pasting into a text editor or Word document — no markdown, no formatting, no symbols.
+
+---
+
+NestJS Built-in Pipes – Theory and Practical Notes
+
+What Are Pipes?
+
+Pipes in NestJS are used for:
+
+* Transformation – converting input data to the desired format.
+* Validation – ensuring data meets defined rules.
+
+They are executed before the route handler and can be applied:
+
+* Globally
+* At controller or method level
+* At parameter level
+
+Most Useful Built-in Pipes:
+
+1. ValidationPipe
+
+2. ParseIntPipe
+
+3. ParseFloatPipe
+
+4. ParseBoolPipe
+
+5. ParseArrayPipe
+
+6. ParseEnumPipe
+
+7. DefaultValuePipe
+
+8. ParseUUIDPipe
+
+9. ValidationPipe
+
+Theory:
+
+* Validates incoming request body using DTOs and class-validator.
+
+Practical:
+
+Install:
+npm install class-validator class-transformer
+
+DTO:
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+
+export class CreateUserDto {
+@IsString()
+@IsNotEmpty()
+name: string;
+
+@IsEmail()
+email: string;
+}
+
+Controller:
+@Post()
+createUser(@Body(new ValidationPipe()) body: CreateUserDto) {
+return body;
+}
+
+2. ParseIntPipe
+
+Theory:
+
+* Converts a string to an integer.
+* Throws 400 Bad Request if invalid.
+
+Practical:
+@Get('\:id')
+getUser(@Param('id', ParseIntPipe) id: number) {
+return `User ID: ${id}`;
+}
+
+3. ParseFloatPipe
+
+Theory:
+
+* Converts a string to float.
+* Throws 400 if parsing fails.
+
+Practical:
+@Get('price/\:amount')
+getPrice(@Param('amount', ParseFloatPipe) amount: number) {
+return `Price is ${amount}`;
+}
+
+4. ParseBoolPipe
+
+Theory:
+
+* Converts string to boolean.
+* Accepts true, false, 1, 0.
+
+Practical:
+@Get('show/\:status')
+getStatus(@Param('status', ParseBoolPipe) status: boolean) {
+return `Show: ${status}`;
+}
+
+5. ParseArrayPipe
+
+Theory:
+
+* Converts comma-separated string into array.
+* Can enforce item types.
+
+Practical:
+@Get('tags')
+getTags(
+@Query('tags', new ParseArrayPipe({ items: String, separator: ',' })) tags: string\[]
+) {
+return tags;
+}
+
+6. ParseEnumPipe
+
+Theory:
+
+* Validates value against defined enum.
+
+Practical:
+export enum Role {
+ADMIN = 'admin',
+USER = 'user',
+}
+
+@Get('role/\:role')
+getByRole(@Param('role', new ParseEnumPipe(Role)) role: Role) {
+return `Role: ${role}`;
+}
+
+7. DefaultValuePipe
+
+Theory:
+
+* Assigns a default value if input is missing.
+
+Practical:
+@Get('page')
+getPage(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number) {
+return `Page: ${page}`;
+}
+
+8. ParseUUIDPipe
+
+Theory:
+
+* Validates UUID format (v1 to v4).
+* Throws 400 if invalid.
+
+Practical:
+@Get('resource/\:id')
+getResource(@Param('id', new ParseUUIDPipe()) id: string) {
+return `UUID: ${id}`;
+}
+
+Global Use of Pipes (main.ts)
+
+async function bootstrap() {
+const app = await NestFactory.create(AppModule);
+app.useGlobalPipes(new ValidationPipe());
+await app.listen(3000);
+}
+
+---
+
+NestJS Custom Pipes – Theory and Practical Notes
+
+What Are Custom Pipes?
+
+Custom pipes allow you to:
+
+* Transform input data in custom ways.
+* Validate or enforce custom business rules.
+* Reuse logic across parameters or controllers.
+
+They implement the PipeTransform interface and use the transform method.
+
+Typical Use Cases:
+
+* Capitalizing strings
+* Validating number ranges
+* Cleaning or trimming input
+
+How to Create a Custom Pipe
+
+Steps:
+
+1. Create a class that implements PipeTransform
+2. Write transform(value, metadata) logic
+3. Throw BadRequestException for invalid input
+
+Example 1: CapitalizePipe
+
+Folder Structure:
+src/
+└── pipes/
+└── custom/
+├── capitalize.pipe.ts
+├── custom.pipe.module.ts
+└── custom-pipes.controller.ts
+
+Create files:
+mkdir -p src/pipes/custom
+touch src/pipes/custom/capitalize.pipe.ts
+touch src/pipes/custom/custom.pipe.module.ts
+touch src/pipes/custom-pipes.controller.ts
+
+capitalize.pipe.ts:
+import { PipeTransform, Injectable } from '@nestjs/common';
+
+@Injectable()
+export class CapitalizePipe implements PipeTransform {
+transform(value: string): string {
+if (typeof value !== 'string') {
+throw new Error('Value must be a string');
+}
+return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+}
+
+custom-pipes.controller.ts:
+import { Controller, Get, Param } from '@nestjs/common';
+import { CapitalizePipe } from './custom/capitalize.pipe';
+
+@Controller('custom-pipes')
+export class CustomPipesController {
+@Get('capitalize/\:text')
+capitalize(@Param('text', CapitalizePipe) text: string) {
+return { transformed: text };
+}
+}
+
+custom.pipe.module.ts:
+import { Module } from '@nestjs/common';
+import { CustomPipesController } from '../custom-pipes.controller';
+import { CapitalizePipe } from './capitalize.pipe';
+
+@Module({
+controllers: \[CustomPipesController],
+providers: \[CapitalizePipe],
+})
+export class CustomPipeModule {}
+
+Add in app.module.ts:
+import { Module } from '@nestjs/common';
+import { CustomPipeModule } from './pipes/custom/custom.pipe.module';
+
+@Module({
+imports: \[CustomPipeModule],
+})
+export class AppModule {}
+
+Test:
+GET [http://localhost:3000/custom-pipes/capitalize/waseem](http://localhost:3000/custom-pipes/capitalize/waseem)
+
+Response:
+{ "transformed": "Waseem" }
+
+Example 2: RangePipe (Number Range Validator)
+
+range.pipe.ts:
+import {
+PipeTransform,
+Injectable,
+BadRequestException,
+} from '@nestjs/common';
+
+@Injectable()
+export class RangePipe implements PipeTransform {
+constructor(private min: number, private max: number) {}
+
+transform(value: any): number {
+const number = parseInt(value, 10);
+if (isNaN(number)) {
+throw new BadRequestException('Value must be a number');
+}
+if (number < this.min || number > this.max) {
+throw new BadRequestException(`Number must be between ${this.min} and ${this.max}`);
+}
+return number;
+}
+}
+
+custom-pipes.controller.ts (add route):
+import { RangePipe } from './custom/range.pipe';
+
+@Get('range/\:value')
+checkRange(@Param('value', new RangePipe(10, 100)) value: number) {
+return { number: value };
+}
+
+Test:
+GET [http://localhost:3000/custom-pipes/range/50](http://localhost:3000/custom-pipes/range/50)     (Valid)
+GET [http://localhost:3000/custom-pipes/range/200](http://localhost:3000/custom-pipes/range/200)    (Invalid)
+
+---
