@@ -1,15 +1,12 @@
 import {
-          Body,
+  Body,
   Controller,
   Get,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
-  Post,
   Query,
 } from '@nestjs/common';
-import { create } from 'domain';
-import { createPropertyDto } from './dto/createPropertry.dto';
 
 @Controller('property')
 export class PropertyController {
@@ -26,10 +23,4 @@ export class PropertyController {
     console.log(typeof sort); // boolean
     return `This action returns a single property with id: ${id} and sort: ${sort}`;
   }
-}
-
-
-@Post()
-create(@Body() body: createPropertyDto) {
-  return body;
 }

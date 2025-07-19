@@ -53,7 +53,7 @@ export class AppModule {}
 Instead of placing everything in the root module, NestJS encourages splitting your application into feature modules.
 
 Example:
-$ nest generate module users
+$ nest generate g module users // with g you can register it to App.module
 $ nest generate service users
 $ nest generate controller users
 
@@ -173,9 +173,3 @@ app.module.ts:
 })
 export class AppModule {}
 
-13. Summary
------------
-- Modules are the backbone of NestJS architecture.
-- They help organize your code, enable dependency injection, and promote maintainability.
-- You can have root, feature, shared, dynamic, and global modules.
-- Use @Module() to declare modules and register their imports, providers, and controllers.

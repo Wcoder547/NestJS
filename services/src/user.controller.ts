@@ -43,7 +43,8 @@ export class UserController {
   @Delete(':id')
   deleteUser(@Param('id') id: string) {
     const userId = parseInt(id);
-    console.log(`Deleting user with ID ${userId}`);
+    console.log(`Deleting user wi  console.log('Creating user with data:', createUserDto);
+    return this.userService.addUser(createUserDto);th ID ${userId}`);
     return this.userService.deleteUser(userId);
   }
 }

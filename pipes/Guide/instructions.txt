@@ -1,7 +1,3 @@
-Sure. Here's a clean, organized **plain text version** of **NestJS Built-in Pipes** and **Custom Pipes** practical + theory notes. It’s fully suitable for pasting into a text editor or Word document — no markdown, no formatting, no symbols.
-
----
-
 NestJS Built-in Pipes – Theory and Practical Notes
 
 What Are Pipes?
@@ -58,7 +54,7 @@ name: string;
 email: string;
 }
 
-Controller:
+1.Controller:
 @Post()
 createUser(@Body(new ValidationPipe()) body: CreateUserDto) {
 return body;
@@ -309,15 +305,6 @@ What Is Schema-Based Validation?
 
 Schema-based validation uses schema definitions (like Zod or Joi) to validate incoming data instead of decorators like @IsString(), @IsEmail() used in class-validator.
 
-Benefits:
-
-    Independent of classes and decorators
-
-    Powerful composability
-
-    More flexible with advanced data structures
-
-    Easily reusable
 
 Popular Libraries:
 
