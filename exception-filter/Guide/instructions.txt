@@ -1,0 +1,144 @@
+=========================================================
+Exception Handling in NestJS
+=========================================================
+
+1. Built-in Methods & DB Connection Error Handling
+---------------------------------------------------------
+- Always use try-catch blocks when interacting with DB.
+- Example:
+  try {
+     // DB call
+  } catch (error) {
+     throw new RequestTimeoutException('An error occurred', {
+        description: 'Try again later.'
+     });
+  }
+
+2. Conditional Exception Handling
+---------------------------------------------------------
+- Example:
+  if (!data) {
+     throw new NotFoundException('Data not found');
+  } else if (invalidCondition) {
+     throw new BadRequestException('Invalid input');
+  }
+
+- Use:
+  console.log(error)  // For debugging
+
+3. Model Constraint Exceptions
+---------------------------------------------------------
+- Example:
+  - Unique constraint violations
+  - Invalid enum values
+- Handle via filters or DB error codes.
+
+4. Custom Exception with HttpException
+---------------------------------------------------------
+- Create a custom class:
+  ```ts
+  export class MyCustomException extends HttpException {
+     constructor() {
+        super('Custom error', HttpStatus.BAD_REQUEST);
+     }
+  }
+````
+
+5. Built-in Exception Filters
+
+---
+
+* Throw examples:
+  throw new HttpException("Invalid ID", 400);
+  throw new BadRequestException("Invalid ID", "ID is not valid");
+  throw new NotFoundException("Data not found");
+  throw new UnauthorizedException("Not allowed");
+
+* Docs:
+  [https://docs.nestjs.com/exception-filters](https://docs.nestjs.com/exception-filters)
+
+6. Global Exception Filter
+
+---
+
+* Recognized => `instanceof HttpException`
+* Unrecognized => Any other error (like syntax/runtime)
+
+7. Custom Exception Filter
+
+---
+
+* File: `id-exception.filter.ts`
+
+  ```ts
+  @Catch(IdException)
+  export class IdExceptionFilter implements ExceptionFilter {
+     catch(exception: IdException, host: ArgumentsHost) {
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse<Response>();
+
+        const body = {
+           message: exception.message,
+           error: "ID Error"
+        };
+
+        response.status(HttpStatus.BAD_REQUEST).json(body);
+     }
+  }
+  ```
+
+* Usage:
+
+  ```ts
+  @UseFilters(IdExceptionFilter)
+  ```
+
+8. Application-Level Exception Filter
+
+---
+
+* File: `app-exception.filter.ts`
+
+  ```ts
+  @Catch()
+  export class AppExceptionFilter implements ExceptionFilter {
+     constructor(private httpAdapterHost: HttpAdapterHost) {}
+
+     catch(exception: unknown, host: ArgumentsHost): void {
+        const { httpAdapter } = this.httpAdapterHost;
+        const ctx = host.switchToHttp();
+
+        const httpStatus = exception instanceof HttpException
+           ? exception.getStatus()
+           : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        const body = {
+           statusCode: httpStatus,
+           timestamp: new Date().toISOString(),
+           message: exception instanceof HttpException
+              ? exception.message
+              : 'Internal server error',
+        };
+
+        httpAdapter.reply(ctx.getResponse(), body, httpStatus);
+     }
+  }
+  ```
+
+* Register globally:
+
+  ```ts
+  // main.ts
+  app.useGlobalFilters(new AppExceptionFilter(adapterHost));
+  ```
+
+  ```ts
+  // app.module.ts
+  {
+     provide: APP_FILTER,
+     useClass: AppExceptionFilter
+  }
+  ```
+
+
+
